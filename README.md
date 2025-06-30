@@ -7,12 +7,15 @@ see [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/
 # Quickstart
 
 1. **Download git repository**
+   
    `git clone https://github.com/BlockRazorinc/solana-trader-client-go.git`
 
 2. **Change directory**
+   
    `cd solana-trader-client-go`
 
 3. **Download dependencies**
+   
    `go mod tidy`
 
 4. **Edit example/main.go**
@@ -38,4 +41,5 @@ see [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/
 	```
 
 5. **Run example**
-`cd example && go run main.go`
+   
+   `cd example && go run main.go`
