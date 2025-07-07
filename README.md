@@ -40,10 +40,10 @@ see [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/
 	tipAmount = 1_000_000
 	```
 
-5.1 **Run mode_fast example**
+5. **Run mode_fast example**
    
-   `cd example/mode_fast && go run main.go`
+   `go run example/mode_fast/main.go`
 
-5.2 **Run mode_sandwichMitigation example**
+6. **Run mode_sandwichMitigation example**
    
-   `cd example/mode_sandwichMitigation && go run main.go`
+   `go run example/mode_sandwichMitigation/main.go`
