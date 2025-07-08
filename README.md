@@ -18,7 +18,7 @@ see [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/
    
    `go mod tidy`
 
-4. **Edit example/main.go**
+4. **Edit example/mode_fast/main.go or example/mode_sandwichMitigation/main.go**
 
 	```
 	// BlockRazor relay endpoint address
@@ -34,7 +34,7 @@ see [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/
 	// transfer amount
 	amount = 200_000
 	// send mode
-	mode = "fast"
+	mode = ""
 
 	// tip amount
 	tipAmount = 1_000_000
