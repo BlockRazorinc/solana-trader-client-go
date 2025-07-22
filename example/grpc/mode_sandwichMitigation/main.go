@@ -21,9 +21,9 @@ const (
 	mainNetRPC = ""
 	// replace your authKey
 	authKey = ""
-	// relace your private key
+	// relace your private key(base58)
 	privateKey = ""
-	// publicKey
+	// publicKey(base58)
 	publicKey = ""
 	// transfer amount
 	amount = 200_000
