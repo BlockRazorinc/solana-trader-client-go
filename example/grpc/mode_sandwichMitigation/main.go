@@ -21,9 +21,9 @@ const (
 	mainNetRPC = ""
 	// replace your authKey
 	authKey = ""
-	// relace your private key(base58)
+	// relace your private key
 	privateKey = ""
-	// publicKey(base58)
+	// publicKey
 	publicKey = ""
 	// transfer amount
 	amount = 200_000
@@ -31,6 +31,8 @@ const (
 	mode = "sandwichMitigation"
 	// safeWindow
 	safeWindow = 5
+	// revertProtection
+	revertProtection = false
 	// tip amount
 	tipAmount = 1_000_000
 )
@@ -110,9 +112,10 @@ func main() {
 
 	txBase64, _ := tx.ToBase64()
 	sendRes, err := client.SendTransaction(context.TODO(), &pb.SendRequest{
-		Transaction: txBase64,
-		Mode:        mode,
-		SafeWindow:  safeWindow,
+		Transaction:      txBase64,
+		Mode:             mode,
+		SafeWindow:       safeWindow,
+		RevertProtection: revertProtection,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("[send tx] error: %v", err))
