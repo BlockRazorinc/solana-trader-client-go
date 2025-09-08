@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"time"
 
 	pb "github.com/BlockRazorinc/solana-trader-client-go/pb/serverpb"
 
@@ -68,8 +69,22 @@ func main() {
 	// use the Gateway client connection interface
 	client := pb.NewServerClient(conn)
 
-	// grpc request warmup
-	client.GetHealth(context.Background(), &pb.HealthRequest{})
+	// Pre-warm: perform an initial health check to establish the grpc connection
+	err = pingHealth(client)
+	if err != nil {
+		fmt.Printf("health check failed: %v\n", err)
+	}
+	// Start a background goroutine to periodically send /health requests
+	// For low-frequency users, this keeps the grpc connection alive (warm)
+	go func() {
+		for {
+			err := pingHealth(client)
+			if err != nil {
+				fmt.Printf("health check failed: %v\n", err)
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}()
 
 	// new rpc client and get latest block hash
 	rpcClient := rpc.New(mainNetRPC)
@@ -130,4 +145,14 @@ func (a *Authentication) GetRequestMetadata(context.Context, ...string) (map[str
 
 func (a *Authentication) RequireTransportSecurity() bool {
 	return false
+}
+
+func pingHealth(client pb.ServerClient) error {
+	// grpc request warmup
+	healthRes, err := client.GetHealth(context.Background(), &pb.HealthRequest{})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("[health] response: %+v \n", healthRes.Status)
+	return err
 }
