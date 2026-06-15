@@ -122,14 +122,14 @@ func main() {
 		panic(fmt.Sprintf("sign tx error: %v", err))
 	}
 
-	txBase64, err := tx.ToBase64()
+	binTx, err := tx.MarshalBinary()
 	if err != nil {
-		panic(fmt.Sprintf("encode tx error: %v", err))
+		panic(fmt.Sprintf("marshal tx error: %v", err))
 	}
 
-	sendRes, err := client.SendTransaction(context.TODO(), &pb.SendRequest{
-		Transaction: txBase64,
-		Mode:        mode,
+	sendRes, err := client.SendBinaryTransaction(context.TODO(), &pb.SendBinaryRequest{
+		BinaryTransaction: binTx,
+		Mode:              mode,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("[send tx] error: %v", err))

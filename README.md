@@ -1,149 +1,214 @@
 # Solana-trader-client-go
-example for solana-trader-client in Go
+
+Example for solana-trader-client in Go.
 
 # Document
-see [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/go)
+
+See [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/go).
+
+# Transaction Encoding
+
+Two transaction encoding methods are supported:
+
+| Encoding | gRPC Method | HTTP Endpoint | Request Field |
+|---|---|---|---|
+| Base64 | `SendTransaction` | `/sendTransaction` | `transaction` |
+| Binary | `SendBinaryTransaction` | `/sendBinaryTransaction` | `binaryTransaction` |
+
+Binary examples use `tx.MarshalBinary()`.
+
+For HTTP Binary requests, the request body is still JSON. Go's `encoding/json`
+package encodes the `[]byte` value as a Base64 JSON string automatically.
 
 # Quickstart
 
 1. **Download git repository**
-   
-   `git clone https://github.com/BlockRazorinc/solana-trader-client-go.git`
+
+   ```bash
+   git clone https://github.com/BlockRazorinc/solana-trader-client-go.git
+   ```
 
 2. **Change directory**
-   
-   `cd solana-trader-client-go`
+
+   ```bash
+   cd solana-trader-client-go
+   ```
 
 3. **Download dependencies**
-   
-   `go mod tidy`
 
-4. **Edit example/grpc/mode_fast/main.go**
+   ```bash
+   go mod tidy
+   ```
 
-	```
-	// BlockRazor relay endpoint address
-	blzRelayEndpoint = "frankfurt.solana-grpc.blockrazor.xyz:80"
-	// replace your solana rpc endpoint
-	mainNetRPC = ""
-	// replace your authKey
-	authKey = ""
-	// relace your private key(base58)
-	privateKey = ""
-	// publicKey(base58)
-	publicKey = ""
-	// transfer amount
-	amount = 200_000
-	// send mode
-	mode = "fast"
+4. **Edit `example/grpc/mode_fast/main.go`**
 
-	// tip amount
-	tipAmount = 1_000_000
-	```
+   ```go
+   // BlockRazor relay endpoint address
+   blzRelayEndpoint = "frankfurt.solana-grpc.blockrazor.xyz:80"
+   // replace your solana rpc endpoint
+   mainNetRPC = ""
+   // replace your authKey
+   authKey = ""
+   // replace your private key (base58)
+   privateKey = ""
+   // publicKey (base58)
+   publicKey = ""
+   // transfer amount
+   amount = 200_000
+   // send mode
+   mode = "fast"
+   // tip amount
+   tipAmount = 1_000_000
+   ```
 
-5. **Run grpc/mode_fast example**
-   
-   `go run example/grpc/mode_fast/main.go`
+5. **Run the gRPC fast mode Base64 example**
 
-# GRPC
+   ```bash
+   go run example/grpc/mode_fast/main.go
+   ```
 
-## fast mode
+For Binary transaction examples, see the Binary sections below.
 
-1. **Edit example/grpc/mode_fast/main.go**
-    ```
-	// BlockRazor relay endpoint address
-	blzRelayEndpoint = "frankfurt.solana-grpc.blockrazor.xyz:80"
-	// replace your solana rpc endpoint
-	mainNetRPC = ""
-	// replace your authKey
-	authKey = ""
-	// relace your private key(base58)
-	privateKey = ""
-	// publicKey(base58)
-	publicKey = ""
-	// transfer amount
-	amount = 200_000
-	// send mode
-	mode = "fast"
+# gRPC
 
-	// tip amount
-	tipAmount = 1_000_000
-	```
- 
-2. **Run grpc/mode_fast example**
-   
-   `go run example/grpc/mode_fast/main.go`
+## Fast Mode
 
-## sandwichMitigation mode
+### Base64
 
+Uses `SendTransaction` with a Base64-encoded transaction.
 
-1. **Edit example/grpc/mode_sandwichMitigation/main.go**
-    ```
-	// BlockRazor relay endpoint address
-	blzRelayEndpoint = "frankfurt.solana-grpc.blockrazor.xyz:80"
-	// replace your solana rpc endpoint
-	mainNetRPC = ""
-	// replace your authKey
-	authKey = ""
-	// relace your private key(base58)
-	privateKey = ""
-	// publicKey(base58)
-	publicKey = ""
-	// transfer amount
-	amount = 200_000
-	// send mode
-	mode = "sandwichMitigation"
-	// safeWindow
-	safeWindow = 5
-	// revertProtection
-	revertProtection = false
-	// tip amount
-	tipAmount = 1_000_000
-	```
- 
-2. **Run grpc/mode_sandwichMitigation example**
-   
-   `go run example/grpc/mode_sandwichMitigation/main.go`
+Edit:
+
+```text
+example/grpc/mode_fast/main.go
+```
+
+Run:
+
+```bash
+go run example/grpc/mode_fast/main.go
+```
+
+### Binary
+
+Uses `SendBinaryTransaction` with transaction bytes.
+
+Edit:
+
+```text
+example/grpc/mode_fast_binary/main.go
+```
+
+Run:
+
+```bash
+go run example/grpc/mode_fast_binary/main.go
+```
+
+## Sandwich Mitigation Mode
+
+Set `safeWindow` and `revertProtection` according to your requirements.
+
+### Base64
+
+Uses `SendTransaction` with a Base64-encoded transaction.
+
+Edit:
+
+```text
+example/grpc/mode_sandwichMitigation/main.go
+```
+
+Run:
+
+```bash
+go run example/grpc/mode_sandwichMitigation/main.go
+```
+
+### Binary
+
+Uses `SendBinaryTransaction` with transaction bytes.
+
+Edit:
+
+```text
+example/grpc/mode_sandwichMitigation_binary/main.go
+```
+
+Run:
+
+```bash
+go run example/grpc/mode_sandwichMitigation_binary/main.go
+```
 
 # HTTP
 
+## Fast Mode
 
-## fast mode
+### Base64
 
-1. **Edit example/http/mode_fast/main.go**
-    ```
-	httpEndpoint   = "http://frankfurt.solana.blockrazor.xyz:443/sendTransaction"
-	healthEndpoint = "http://frankfurt.solana.blockrazor.xyz:443/health"
-	mainNetRPC     = ""
-	authKey        = ""
-	privateKey     = ""
-	publicKey      = ""
-	amount         = 200_000
-	tipAmount      = 1_000_000
-	mode           = "fast"
-	```
- 
-2. **Run http/mode_fast example**
-   
-   `go run example/http/mode_fast/main.go`
+Uses `/sendTransaction` with the `transaction` request field.
 
-## sandwichMitigation mode
+Edit:
 
+```text
+example/http/mode_fast/main.go
+```
 
-1. **Edit example/http/mode_sandwichMitigation/main.go**
-    ```
-	httpEndpoint     = "http://frankfurt.solana.blockrazor.xyz:443/sendTransaction"
-	healthEndpoint   = "http://frankfurt.solana.blockrazor.xyz:443/health"
-	mainNetRPC       = ""
-	authKey          = ""
-	privateKey       = ""
-	publicKey        = ""
-	amount           = 200_000
-	tipAmount        = 1_000_000
-	mode             = "sandwichMitigation"
-	safeWindow       = 5
-	revertProtection = false
-	```
- 
-2. **Run http/mode_sandwichMitigation example**
-   
-   `go run example/http/mode_sandwichMitigation/main.go`
+Run:
+
+```bash
+go run example/http/mode_fast/main.go
+```
+
+### Binary
+
+Uses `/sendBinaryTransaction` with the `binaryTransaction` request field.
+
+Edit:
+
+```text
+example/http/mode_fast_binary/main.go
+```
+
+Run:
+
+```bash
+go run example/http/mode_fast_binary/main.go
+```
+
+## Sandwich Mitigation Mode
+
+Set `safeWindow` and `revertProtection` according to your requirements.
+
+### Base64
+
+Uses `/sendTransaction` with the `transaction` request field.
+
+Edit:
+
+```text
+example/http/mode_sandwichMitigation/main.go
+```
+
+Run:
+
+```bash
+go run example/http/mode_sandwichMitigation/main.go
+```
+
+### Binary
+
+Uses `/sendBinaryTransaction` with the `binaryTransaction` request field.
+
+Edit:
+
+```text
+example/http/mode_sandwichMitigation_binary/main.go
+```
+
+Run:
+
+```bash
+go run example/http/mode_sandwichMitigation_binary/main.go
+```
