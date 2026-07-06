@@ -69,11 +69,13 @@ package encodes the `[]byte` value as a Base64 JSON string automatically.
 
 For Binary transaction examples, see the Binary sections below.
 
-# gRPC
+# Send Transaction
 
-## Fast Mode
+## gRPC
 
-### Base64
+### Fast Mode
+
+#### Base64
 
 Uses `SendTransaction` with a Base64-encoded transaction.
 
@@ -89,7 +91,7 @@ Run:
 go run example/grpc/mode_fast/main.go
 ```
 
-### Binary
+#### Binary
 
 Uses `SendBinaryTransaction` with transaction bytes.
 
@@ -105,11 +107,11 @@ Run:
 go run example/grpc/mode_fast_binary/main.go
 ```
 
-## Sandwich Mitigation Mode
+### Sandwich Mitigation Mode
 
 Set `safeWindow` and `revertProtection` according to your requirements.
 
-### Base64
+#### Base64
 
 Uses `SendTransaction` with a Base64-encoded transaction.
 
@@ -125,7 +127,7 @@ Run:
 go run example/grpc/mode_sandwichMitigation/main.go
 ```
 
-### Binary
+#### Binary
 
 Uses `SendBinaryTransaction` with transaction bytes.
 
@@ -141,11 +143,11 @@ Run:
 go run example/grpc/mode_sandwichMitigation_binary/main.go
 ```
 
-# HTTP
+## HTTP
 
-## Fast Mode
+### Fast Mode
 
-### Base64
+#### Base64
 
 Uses `/sendTransaction` with the `transaction` request field.
 
@@ -161,7 +163,7 @@ Run:
 go run example/http/mode_fast/main.go
 ```
 
-### Binary
+#### Binary
 
 Uses `/sendBinaryTransaction` with the `binaryTransaction` request field.
 
@@ -177,11 +179,11 @@ Run:
 go run example/http/mode_fast_binary/main.go
 ```
 
-## Sandwich Mitigation Mode
+### Sandwich Mitigation Mode
 
 Set `safeWindow` and `revertProtection` according to your requirements.
 
-### Base64
+#### Base64
 
 Uses `/sendTransaction` with the `transaction` request field.
 
@@ -197,7 +199,7 @@ Run:
 go run example/http/mode_sandwichMitigation/main.go
 ```
 
-### Binary
+#### Binary
 
 Uses `/sendBinaryTransaction` with the `binaryTransaction` request field.
 
@@ -211,4 +213,38 @@ Run:
 
 ```bash
 go run example/http/mode_sandwichMitigation_binary/main.go
+```
+
+# Send Bundle
+
+## gRPC
+
+Uses `SendBundle` with Base64-encoded transactions.
+
+Edit:
+
+```text
+example/grpc/send_bundle/main.go
+```
+
+Run:
+
+```bash
+go run example/grpc/send_bundle/main.go
+```
+
+## HTTP
+
+Uses `/sendBundle` with the `transactions` request field.
+
+Edit:
+
+```text
+example/http/send_bundle/main.go
+```
+
+Run:
+
+```bash
+go run example/http/send_bundle/main.go
 ```

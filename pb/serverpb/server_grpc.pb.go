@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Server_SendTransaction_FullMethodName       = "/serverpb.Server/SendTransaction"
 	Server_SendBinaryTransaction_FullMethodName = "/serverpb.Server/SendBinaryTransaction"
+	Server_SendBundle_FullMethodName            = "/serverpb.Server/SendBundle"
 	Server_GetHealth_FullMethodName             = "/serverpb.Server/GetHealth"
 )
 
@@ -30,6 +31,7 @@ const (
 type ServerClient interface {
 	SendTransaction(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendResponse, error)
 	SendBinaryTransaction(ctx context.Context, in *SendBinaryRequest, opts ...grpc.CallOption) (*SendResponse, error)
+	SendBundle(ctx context.Context, in *SendBundleRequest, opts ...grpc.CallOption) (*SendBundleResponse, error)
 	GetHealth(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
 }
 
@@ -61,6 +63,16 @@ func (c *serverClient) SendBinaryTransaction(ctx context.Context, in *SendBinary
 	return out, nil
 }
 
+func (c *serverClient) SendBundle(ctx context.Context, in *SendBundleRequest, opts ...grpc.CallOption) (*SendBundleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendBundleResponse)
+	err := c.cc.Invoke(ctx, Server_SendBundle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *serverClient) GetHealth(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HealthResponse)
@@ -77,6 +89,7 @@ func (c *serverClient) GetHealth(ctx context.Context, in *HealthRequest, opts ..
 type ServerServer interface {
 	SendTransaction(context.Context, *SendRequest) (*SendResponse, error)
 	SendBinaryTransaction(context.Context, *SendBinaryRequest) (*SendResponse, error)
+	SendBundle(context.Context, *SendBundleRequest) (*SendBundleResponse, error)
 	GetHealth(context.Context, *HealthRequest) (*HealthResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
@@ -93,6 +106,9 @@ func (UnimplementedServerServer) SendTransaction(context.Context, *SendRequest) 
 }
 func (UnimplementedServerServer) SendBinaryTransaction(context.Context, *SendBinaryRequest) (*SendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendBinaryTransaction not implemented")
+}
+func (UnimplementedServerServer) SendBundle(context.Context, *SendBundleRequest) (*SendBundleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendBundle not implemented")
 }
 func (UnimplementedServerServer) GetHealth(context.Context, *HealthRequest) (*HealthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHealth not implemented")
@@ -154,6 +170,24 @@ func _Server_SendBinaryTransaction_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Server_SendBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendBundleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).SendBundle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_SendBundle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).SendBundle(ctx, req.(*SendBundleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Server_GetHealth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HealthRequest)
 	if err := dec(in); err != nil {
@@ -186,6 +220,10 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendBinaryTransaction",
 			Handler:    _Server_SendBinaryTransaction_Handler,
+		},
+		{
+			MethodName: "SendBundle",
+			Handler:    _Server_SendBundle_Handler,
 		},
 		{
 			MethodName: "GetHealth",
