@@ -248,3 +248,53 @@ Run:
 ```bash
 go run example/http/send_bundle/main.go
 ```
+
+# Send Batch
+
+## gRPC
+
+Uses `SendBatch` with Base64-encoded transactions.
+
+Edit:
+
+```text
+example/grpc/send_batch/main.go
+```
+
+Run:
+
+```bash
+go run example/grpc/send_batch/main.go
+```
+
+## HTTP
+
+Uses `/sendBatch` with the `transactions` request field.
+
+Edit:
+
+```text
+example/http/send_batch/main.go
+```
+
+Run:
+
+```bash
+go run example/http/send_batch/main.go
+```
+
+## HTTP with Binary
+
+Uses `/v2/sendBinaryBatch` with the `buildBinaryBody` function.
+
+Edit:
+
+```text
+example/http/send_batch_binary/main.go
+```
+
+Run:
+
+```bash
+go run example/http/send_batch_binary/main.go
+```
