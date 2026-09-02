@@ -1,300 +1,190 @@
-# Solana-trader-client-go
+# BlockRazor Solana Transaction Sending — Go Examples
 
-Example for solana-trader-client in Go.
+Go examples for sending signed Solana transactions through [BlockRazor](https://blockrazor.io/) over HTTP or gRPC. The repository demonstrates low-latency single-transaction submission, batch submission, and atomic bundles in both Fast and Sandwich Mitigation modes.
 
-# Document
+> These examples construct and sign transactions locally. Private keys are used only by the local Go process and must never be sent to BlockRazor or committed to source control.
 
-See [document](https://blockrazor.gitbook.io/blockrazor/solana/send-transaction/go).
+## What this repository covers
 
-# Transaction Encoding
+| Capability | HTTP | gRPC | Examples in this repository |
+| --- | --- | --- | --- |
+| Send Transaction | `/sendTransaction`, `/sendBinaryTransaction` | `SendTransaction`, `SendBinaryTransaction` | Base64 and binary; Fast and Sandwich Mitigation |
+| Send Batch | `/sendBatch`, `/v2/sendBinaryBatch` | `SendBatch` | Base64 over HTTP/gRPC and raw binary over HTTP |
+| Send Bundle | `/sendBundle` | `SendBundle` | Base64 over HTTP/gRPC |
+| Keep Alive | `/health` | `GetHealth` | Initial health check and a 30-second health interval |
 
-Two transaction encoding methods are supported:
+BlockRazor also provides v2 Plain Text and raw Binary interfaces. This repository currently includes the raw HTTP binary batch example, but it does not include v2 Plain Text or raw Binary single-transaction examples. See the [official Solana Transaction Sending documentation](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana) for every supported interface.
 
-| Encoding | gRPC Method | HTTP Endpoint | Request Field |
-|---|---|---|---|
-| Base64 | `SendTransaction` | `/sendTransaction` | `transaction` |
-| Binary | `SendBinaryTransaction` | `/sendBinaryTransaction` | `binaryTransaction` |
+## Fast and Sandwich Mitigation modes
 
-Binary examples use `tx.MarshalBinary()`.
+BlockRazor supports two transaction-sending modes:
 
-For HTTP Binary requests, the request body is still JSON. Go's `encoding/json`
-package encodes the `[]byte` value as a Base64 JSON string automatically.
+| Mode | Use it when | Important behavior |
+| --- | --- | --- |
+| `fast` | Inclusion speed is the main priority | Uses BlockRazor's globally distributed network and SWQoS routing to reach the upcoming Leader with low latency; this is the default mode |
+| `sandwichMitigation` | You need additional protection against sandwich attacks | Routes through trusted SWQoS paths and avoids dynamically identified blacklisted Leaders; inclusion may take longer |
 
-# Quickstart
+Sandwich Mitigation accepts two additional parameters:
 
-1. **Download git repository**
+- `safeWindow`: number of consecutive allowlisted-validator slots required before sending. The supported range is `3`–`13`; the default is `3`.
+- `revertProtection`: when `true`, BlockRazor attempts to prevent the transaction from failing on-chain, which can reduce inclusion speed or prevent inclusion.
 
-   ```bash
-   git clone https://github.com/BlockRazorinc/solana-trader-client-go.git
-   ```
+BlockRazor's official mode documentation states that durable nonce transactions must not be used with `sandwichMitigation`, because doing so makes the sandwich protection ineffective. This is a service constraint rather than a check implemented by these Go examples. See [Solana Send Transaction](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-transaction#request-parameter).
 
-2. **Change directory**
+## Requirements
 
-   ```bash
-   cd solana-trader-client-go
-   ```
+- Go 1.23.1 or later
+- A BlockRazor auth key
+- A Solana RPC endpoint for fetching a recent blockhash
+- A funded Solana keypair for examples that transfer SOL and pay fees/tips
 
-3. **Download dependencies**
+The generated Protobuf and gRPC Go files are committed under `pb/serverpb/`, so `protoc` is not required to build or run the existing examples.
 
-   ```bash
-   go mod tidy
-   ```
+Obtain an auth key by following [How to Obtain an Auth Token](https://docs.blockrazor.io/get-started/authentication). The default rate limit for transaction and batch sending is documented as 3 TPS; bundle access is not enabled by default. Contact BlockRazor if you need bundle access or a higher limit.
 
-4. **Edit `example/grpc/mode_fast/main.go`**
-
-   ```go
-   // BlockRazor relay endpoint address
-   blzRelayEndpoint = "frankfurt.solana-grpc.blockrazor.xyz:80"
-   // replace your solana rpc endpoint
-   mainNetRPC = ""
-   // replace your authKey
-   authKey = ""
-   // replace your private key (base58)
-   privateKey = ""
-   // publicKey (base58)
-   publicKey = ""
-   // transfer amount
-   amount = 200_000
-   // send mode
-   mode = "fast"
-   // tip amount
-   tipAmount = 1_000_000
-   ```
-
-5. **Run the gRPC fast mode Base64 example**
-
-   ```bash
-   go run example/grpc/mode_fast/main.go
-   ```
-
-For Binary transaction examples, see the Binary sections below.
-
-# Send Transaction
-
-## gRPC
-
-### Fast Mode
-
-#### Base64
-
-Uses `SendTransaction` with a Base64-encoded transaction.
-
-Edit:
-
-```text
-example/grpc/mode_fast/main.go
-```
-
-Run:
+## Quick start
 
 ```bash
-go run example/grpc/mode_fast/main.go
+git clone https://github.com/BlockRazorinc/solana-trader-client-go.git
+cd solana-trader-client-go
+go mod download
 ```
 
-#### Binary
+Open the example you want to run and replace its configuration placeholders:
 
-Uses `SendBinaryTransaction` with transaction bytes.
-
-Edit:
-
-```text
-example/grpc/mode_fast_binary/main.go
+```go
+const (
+	mainNetRPC = "YOUR_SOLANA_RPC_ENDPOINT"
+	authKey    = "YOUR_BLOCKRAZOR_AUTH_KEY"
+	privateKey = "YOUR_BASE58_PRIVATE_KEY"
+	publicKey  = "RECIPIENT_PUBLIC_KEY"
+)
 ```
 
-Run:
+Each example contains a default Frankfurt endpoint. For production, select the region closest to your application from the current [Solana Transaction Sending endpoint list](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/endpoint).
 
-```bash
-go run example/grpc/mode_fast_binary/main.go
+> Running an example submits a real mainnet transaction. The examples include a tip transfer and may also include a recipient transfer. Review `tipAmount`, `amount`, the recipient, the selected tip account, and the transaction instructions before running them.
+
+## Example matrix
+
+### Send one transaction
+
+| Transport | Mode | Payload | Command |
+| --- | --- | --- | --- |
+| gRPC | Fast | Base64 string | `go run ./example/grpc/mode_fast` |
+| gRPC | Fast | Protobuf bytes | `go run ./example/grpc/mode_fast_binary` |
+| gRPC | Sandwich Mitigation | Base64 string | `go run ./example/grpc/mode_sandwichMitigation` |
+| gRPC | Sandwich Mitigation | Protobuf bytes | `go run ./example/grpc/mode_sandwichMitigation_binary` |
+| HTTP | Fast | Base64 in JSON | `go run ./example/http/mode_fast` |
+| HTTP | Fast | Base64 in the JSON `binaryTransaction` field | `go run ./example/http/mode_fast_binary` |
+| HTTP | Sandwich Mitigation | Base64 in JSON | `go run ./example/http/mode_sandwichMitigation` |
+| HTTP | Sandwich Mitigation | Base64 in the JSON `binaryTransaction` field | `go run ./example/http/mode_sandwichMitigation_binary` |
+
+Transactions are constructed and signed locally with `gagliardetto/solana-go`. Base64 examples use `Transaction.ToBase64()`. Binary examples use `Transaction.MarshalBinary()`.
+
+For HTTP `/sendBinaryTransaction`, the request body is still JSON. Go's `encoding/json` package serializes the `[]byte` field as a Base64 JSON string automatically. For gRPC `SendBinaryTransaction`, the serialized `[]byte` is sent directly as Protobuf bytes.
+
+### Send a batch
+
+Batch submission sends multiple signed transactions in one request. A batch can contain up to 25 fully signed transactions, and the response contains a signature or error for each item.
+
+| Transport | Payload | Command |
+| --- | --- | --- |
+| gRPC | Base64 string array | `go run ./example/grpc/send_batch` |
+| HTTP | Base64 string array in JSON | `go run ./example/http/send_batch` |
+| HTTP v2 | Length-prefixed raw binary transactions | `go run ./example/http/send_batch_binary` |
+
+The v2 binary batch body is a sequence of serialized transactions, each prefixed by a two-byte, big-endian length. The Go example builds this payload with `encoding/binary` and sends it as `application/octet-stream`. See [Solana Send Batch](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-batch) and [Send Batch in Binary](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-batch/send-in-binary) for the current contract.
+
+### Send a bundle
+
+A bundle contains up to four fully signed, Base64-encoded transactions. Transactions execute sequentially and atomically: if any transaction fails, the entire bundle fails.
+
+| Transport | Payload | Command |
+| --- | --- | --- |
+| gRPC | Base64 string array | `go run ./example/grpc/send_bundle` |
+| HTTP | Base64 string array in JSON | `go run ./example/http/send_bundle` |
+
+Bundle access is not enabled by default. See [Solana Send Bundle](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-bundle) for activation and MEV-protection guidance.
+
+## Authentication
+
+Authentication depends on the interface:
+
+| Interface | Auth location |
+| --- | --- |
+| HTTP JSON | `apikey` request header |
+| gRPC | `apikey` per-RPC credentials metadata |
+| HTTP v2 raw binary | `auth` URL query parameter |
+
+The gRPC examples implement `credentials.PerRPCCredentials` through the local `Authentication` type. Never log auth keys or include them in committed files. Prefer environment variables or a secret manager when adapting these examples for production.
+
+## Transaction encoding
+
+| Interface | Field/body | Encoding |
+| --- | --- | --- |
+| gRPC `SendTransaction` | `transaction` | Base64 string |
+| gRPC `SendBinaryTransaction` | `binaryTransaction` | Raw bytes in Protobuf |
+| HTTP `/sendTransaction` | `transaction` | Base64 string in JSON |
+| HTTP `/sendBinaryTransaction` | `binaryTransaction` | `[]byte`, encoded as Base64 by `encoding/json` |
+| HTTP `/v2/sendTransaction` | Request body | Base64 text with `Content-Type: text/plain` |
+| HTTP `/v2/sendBinaryTransaction` | Request body | Raw serialized bytes with `Content-Type: application/octet-stream` |
+
+The last two v2 single-transaction interfaces are part of the BlockRazor service but do not currently have examples in this repository. Refer to [Send in Plain Text](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-transaction/send-in-plain-text) and [Send in Binary](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-transaction/send-in-binary).
+
+## Priority fee and tip
+
+The examples select a BlockRazor tip account at random and place a tip transfer instruction before the primary transfer instruction. Rotating tip accounts helps avoid performance degradation caused by account contention.
+
+The current examples demonstrate the tip transfer but do not add a Compute Budget priority-fee instruction. For production transactions, configure both according to your strategy and current network conditions. Consult [Solana Transaction Sending Priority Fee & Tip](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/priority-fee-and-tip) for the current minimums, recommendations, and official tip accounts.
+
+## Keep the connection warm
+
+Every example performs a health request before sending and repeats it every 30 seconds in a background goroutine.
+
+HTTP examples reuse a package-level `http.Client`. They read each response body to completion and close it, allowing Go's `http.Transport` to reuse the underlying connection. gRPC examples reuse a single `grpc.ClientConn` and generated `ServerClient`.
+
+See [Solana Transaction Sending Keep Alive](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/keep-alive) for the current health endpoint contract.
+
+## Go implementation
+
+- `gagliardetto/solana-go` constructs, signs, serializes, and Base64-encodes transactions.
+- `net/http` and `encoding/json` implement HTTP submission and response parsing.
+- `google.golang.org/grpc` and the generated `pb/serverpb` package implement gRPC submission.
+- `context` is passed through RPC, blockhash, and submission calls.
+- `encoding/binary` builds the v2 length-prefixed binary batch payload.
+
+The gRPC contract lives in [`server.proto`](server.proto):
+
+```proto
+service Server {
+  rpc SendTransaction(SendRequest) returns (SendResponse);
+  rpc SendBinaryTransaction(SendBinaryRequest) returns (SendResponse);
+  rpc SendBatch(SendBatchRequest) returns (SendBatchResponse);
+  rpc SendBundle(SendBundleRequest) returns (SendBundleResponse);
+  rpc GetHealth(HealthRequest) returns (HealthResponse);
+}
 ```
 
-### Sandwich Mitigation Mode
-
-Set `safeWindow` and `revertProtection` according to your requirements.
-
-#### Base64
-
-Uses `SendTransaction` with a Base64-encoded transaction.
-
-Edit:
-
-```text
-example/grpc/mode_sandwichMitigation/main.go
-```
-
-Run:
-
-```bash
-go run example/grpc/mode_sandwichMitigation/main.go
-```
-
-#### Binary
-
-Uses `SendBinaryTransaction` with transaction bytes.
-
-Edit:
-
-```text
-example/grpc/mode_sandwichMitigation_binary/main.go
-```
-
-Run:
-
-```bash
-go run example/grpc/mode_sandwichMitigation_binary/main.go
-```
-
-## HTTP
-
-### Fast Mode
-
-#### Base64
-
-Uses `/sendTransaction` with the `transaction` request field.
-
-Edit:
-
-```text
-example/http/mode_fast/main.go
-```
-
-Run:
-
-```bash
-go run example/http/mode_fast/main.go
-```
-
-#### Binary
-
-Uses `/sendBinaryTransaction` with the `binaryTransaction` request field.
-
-Edit:
-
-```text
-example/http/mode_fast_binary/main.go
-```
-
-Run:
-
-```bash
-go run example/http/mode_fast_binary/main.go
-```
-
-### Sandwich Mitigation Mode
-
-Set `safeWindow` and `revertProtection` according to your requirements.
-
-#### Base64
-
-Uses `/sendTransaction` with the `transaction` request field.
-
-Edit:
-
-```text
-example/http/mode_sandwichMitigation/main.go
-```
-
-Run:
-
-```bash
-go run example/http/mode_sandwichMitigation/main.go
-```
-
-#### Binary
-
-Uses `/sendBinaryTransaction` with the `binaryTransaction` request field.
-
-Edit:
-
-```text
-example/http/mode_sandwichMitigation_binary/main.go
-```
-
-Run:
-
-```bash
-go run example/http/mode_sandwichMitigation_binary/main.go
-```
-
-# Send Bundle
-
-## gRPC
-
-Uses `SendBundle` with Base64-encoded transactions.
-
-Edit:
-
-```text
-example/grpc/send_bundle/main.go
-```
-
-Run:
-
-```bash
-go run example/grpc/send_bundle/main.go
-```
-
-## HTTP
-
-Uses `/sendBundle` with the `transactions` request field.
-
-Edit:
-
-```text
-example/http/send_bundle/main.go
-```
-
-Run:
-
-```bash
-go run example/http/send_bundle/main.go
-```
-
-# Send Batch
-
-## gRPC
-
-Uses `SendBatch` with Base64-encoded transactions.
-
-Edit:
-
-```text
-example/grpc/send_batch/main.go
-```
-
-Run:
-
-```bash
-go run example/grpc/send_batch/main.go
-```
-
-## HTTP
-
-Uses `/sendBatch` with the `transactions` request field.
-
-Edit:
-
-```text
-example/http/send_batch/main.go
-```
-
-Run:
-
-```bash
-go run example/http/send_batch/main.go
-```
-
-## HTTP with Binary
-
-Uses `/v2/sendBinaryBatch` with the `buildBinaryBody` function.
-
-Edit:
-
-```text
-example/http/send_batch_binary/main.go
-```
-
-Run:
-
-```bash
-go run example/http/send_batch_binary/main.go
-```
+## Production checklist
+
+- Load the auth key and private key from environment variables or a secret manager.
+- Use a dedicated, low-balance wallet while adapting the examples.
+- Validate the destination address, transaction instructions, amounts, priority fee, tip, and recent blockhash before signing.
+- Select the nearest BlockRazor endpoint and test latency from your own deployment region.
+- Reuse HTTP/gRPC connections and keep them warm before the critical send path.
+- Add context deadlines, cancellation, retry behavior appropriate to transaction semantics, structured logging, metrics, and graceful shutdown.
+- Check HTTP status codes and gRPC status codes before parsing successful responses.
+- Do not blindly retry a request without checking its returned signature and on-chain status.
+- Follow BlockRazor's documented Durable Nonce restriction when using Sandwich Mitigation mode.
+
+## Documentation and support
+
+- [Solana Transaction Sending](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana)
+- [Endpoints](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/endpoint)
+- [Send Transaction](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-transaction)
+- [Send Batch](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-batch)
+- [Send Bundle](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-bundle)
+- [Priority Fee & Tip](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/priority-fee-and-tip)
+- [Keep Alive](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/keep-alive)
+- [BlockRazor Discord](https://discord.com/invite/qqJuwRb8Nh)
