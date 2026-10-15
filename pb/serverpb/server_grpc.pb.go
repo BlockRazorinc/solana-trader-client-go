@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.29.3
-// source: v1/server.proto
+// source: server.proto
 
 package serverpb
 
@@ -19,12 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Server_SendTransaction_FullMethodName       = "/serverpb.Server/SendTransaction"
-	Server_SendBinaryTransaction_FullMethodName = "/serverpb.Server/SendBinaryTransaction"
-	Server_SendBatch_FullMethodName             = "/serverpb.Server/SendBatch"
-	Server_SendBundle_FullMethodName            = "/serverpb.Server/SendBundle"
-	Server_GetHealth_FullMethodName             = "/serverpb.Server/GetHealth"
-	Server_GetTipAccounts_FullMethodName        = "/serverpb.Server/GetTipAccounts"
+	Server_SendTransaction_FullMethodName = "/serverpb.Server/SendTransaction"
+	Server_SendBatch_FullMethodName       = "/serverpb.Server/SendBatch"
+	Server_SendBundle_FullMethodName      = "/serverpb.Server/SendBundle"
+	Server_GetHealth_FullMethodName       = "/serverpb.Server/GetHealth"
+	Server_GetTipAccounts_FullMethodName  = "/serverpb.Server/GetTipAccounts"
 )
 
 // ServerClient is the client API for Server service.
@@ -32,7 +31,6 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServerClient interface {
 	SendTransaction(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendResponse, error)
-	SendBinaryTransaction(ctx context.Context, in *SendBinaryRequest, opts ...grpc.CallOption) (*SendResponse, error)
 	SendBatch(ctx context.Context, in *SendBatchRequest, opts ...grpc.CallOption) (*SendBatchResponse, error)
 	SendBundle(ctx context.Context, in *SendBundleRequest, opts ...grpc.CallOption) (*SendBundleResponse, error)
 	GetHealth(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
@@ -51,16 +49,6 @@ func (c *serverClient) SendTransaction(ctx context.Context, in *SendRequest, opt
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SendResponse)
 	err := c.cc.Invoke(ctx, Server_SendTransaction_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) SendBinaryTransaction(ctx context.Context, in *SendBinaryRequest, opts ...grpc.CallOption) (*SendResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SendResponse)
-	err := c.cc.Invoke(ctx, Server_SendBinaryTransaction_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +100,6 @@ func (c *serverClient) GetTipAccounts(ctx context.Context, in *GetTipAccountsReq
 // for forward compatibility.
 type ServerServer interface {
 	SendTransaction(context.Context, *SendRequest) (*SendResponse, error)
-	SendBinaryTransaction(context.Context, *SendBinaryRequest) (*SendResponse, error)
 	SendBatch(context.Context, *SendBatchRequest) (*SendBatchResponse, error)
 	SendBundle(context.Context, *SendBundleRequest) (*SendBundleResponse, error)
 	GetHealth(context.Context, *HealthRequest) (*HealthResponse, error)
@@ -129,9 +116,6 @@ type UnimplementedServerServer struct{}
 
 func (UnimplementedServerServer) SendTransaction(context.Context, *SendRequest) (*SendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendTransaction not implemented")
-}
-func (UnimplementedServerServer) SendBinaryTransaction(context.Context, *SendBinaryRequest) (*SendResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendBinaryTransaction not implemented")
 }
 func (UnimplementedServerServer) SendBatch(context.Context, *SendBatchRequest) (*SendBatchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendBatch not implemented")
@@ -180,24 +164,6 @@ func _Server_SendTransaction_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ServerServer).SendTransaction(ctx, req.(*SendRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_SendBinaryTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendBinaryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).SendBinaryTransaction(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_SendBinaryTransaction_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).SendBinaryTransaction(ctx, req.(*SendBinaryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -286,10 +252,6 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Server_SendTransaction_Handler,
 		},
 		{
-			MethodName: "SendBinaryTransaction",
-			Handler:    _Server_SendBinaryTransaction_Handler,
-		},
-		{
 			MethodName: "SendBatch",
 			Handler:    _Server_SendBatch_Handler,
 		},
@@ -307,5 +269,5 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/server.proto",
+	Metadata: "server.proto",
 }

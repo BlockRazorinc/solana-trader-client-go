@@ -6,43 +6,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"time"
 
+	examples "github.com/BlockRazorinc/solana-trader-client-go/example"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/rpc"
 )
 
 const (
-	httpEndpoint   = "http://frankfurt.solana.blockrazor.xyz:443/sendBundle"
-	healthEndpoint = "http://frankfurt.solana.blockrazor.xyz:443/health"
-	mainNetRPC     = ""
-	authKey        = ""
-	privateKey     = ""
-	publicKey      = ""
-	amount         = 200_000
-	tipAmount      = 1_000_000
+	// Example endpoints only. Always use the current endpoints published on the BlockRazor website.
+	httpEndpoint        = "http://frankfurt.solana.blockrazor.xyz:443/sendBundle"
+	healthEndpoint      = "http://frankfurt.solana.blockrazor.xyz:443/health"
+	tipAccountsEndpoint = "http://frankfurt.solana.blockrazor.xyz:443/getTipAccounts"
+	mainNetRPC          = ""
+	authKey             = ""
+	privateKey          = ""
+	publicKey           = ""
+	amount              = 200_000
+	tipAmount           = 100_000
 )
-
-var tipAccounts = []string{
-	"68Pwb4jS7eZATjDfhmTXgRJjCiZmw1L7Huy4HNpnxJ3o",
-	"4ABhJh5rZPjv63RBJBuyWzBK3g9gWMUQdTZP2kiW31V9",
-	"B2M4NG5eyZp5SBQrSdtemzk5TqVuaWGQnowGaCBt8GyM",
-	"5jA59cXMKQqZAVdtopv8q3yyw9SYfiE3vUCbt7p8MfVf",
-	"5YktoWygr1Bp9wiS1xtMtUki1PeYuuzuCF98tqwYxf61",
-	"295Avbam4qGShBYK7E9H5Ldew4B3WyJGmgmXfiWdeeyV",
-	"EDi4rSy2LZgKJX74mbLTFk4mxoTgT6F7HxxzG2HBAFyK",
-	"BnGKHAC386n4Qmv9xtpBVbRaUTKixjBe3oagkPFKtoy6",
-	"Dd7K2Fp7AtoN8xCghKDRmyqr5U169t48Tw5fEd3wT9mq",
-	"AP6qExwrbRgBAVaehg4b5xHENX815sMabtBzUzVB4v8S",
-	"8EpzWhsr7uyZkfVD7MTHoWqupM14xngzMeUcCkWbY1UG",
-	"56XRik27PddNnR7JkHKqd5pWdMHeqje7TCm1gsdmvnTP",
-	"2DJNtR1tT7vfub7sDJ6v9NGmrzGVFUer5FvjhEcWEpvv",
-	"3AveZTS3PJo5qKEqHJci5bjW8neufriirr9mJXfsv4iH",
-	"9DC798ezxU2f2i8ggQ4vsqrsNxdDWJWAFg4cT1xLDR1X",
-}
 
 var httpClient = &http.Client{
 	Timeout: 10 * time.Second,
@@ -83,7 +67,7 @@ func main() {
 }
 
 func pingHealth() error {
-	req, err := http.NewRequest("GET", healthEndpoint, nil)
+	req, err := http.NewRequest("POST", healthEndpoint, bytes.NewBufferString("{}"))
 	if err != nil {
 		return err
 	}
@@ -118,7 +102,10 @@ func sendBundle() error {
 		return err
 	}
 	receivePub := solana.MustPublicKeyFromBase58(publicKey)
-	tipPub := solana.MustPublicKeyFromBase58(tipAccounts[rand.Intn(len(tipAccounts))])
+	tipPub, err := examples.HTTPTipAccount(context.Background(), httpClient, tipAccountsEndpoint)
+	if err != nil {
+		return err
+	}
 
 	rpcClient := rpc.New(mainNetRPC)
 	blockhash, err := rpcClient.GetLatestBlockhash(context.TODO(), rpc.CommitmentFinalized)

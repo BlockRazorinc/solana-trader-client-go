@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"time"
 
+	examples "github.com/BlockRazorinc/solana-trader-client-go/example"
 	pb "github.com/BlockRazorinc/solana-trader-client-go/pb/serverpb"
 
 	"github.com/gagliardetto/solana-go"
@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// BlockRazor relay endpoint address
+	// This example endpoint may change. Always use the current endpoint published on the BlockRazor website.
 	blzRelayEndpoint = "frankfurt.solana-grpc.blockrazor.xyz:80"
 	// replace your solana rpc endpoint
 	mainNetRPC = ""
@@ -35,26 +35,8 @@ const (
 	// revertProtection
 	revertProtection = false
 	// tip amount
-	tipAmount = 1_000_000
+	tipAmount = 100_000
 )
-
-var tipAccounts = []string{
-	"68Pwb4jS7eZATjDfhmTXgRJjCiZmw1L7Huy4HNpnxJ3o",
-	"4ABhJh5rZPjv63RBJBuyWzBK3g9gWMUQdTZP2kiW31V9",
-	"B2M4NG5eyZp5SBQrSdtemzk5TqVuaWGQnowGaCBt8GyM",
-	"5jA59cXMKQqZAVdtopv8q3yyw9SYfiE3vUCbt7p8MfVf",
-	"5YktoWygr1Bp9wiS1xtMtUki1PeYuuzuCF98tqwYxf61",
-	"295Avbam4qGShBYK7E9H5Ldew4B3WyJGmgmXfiWdeeyV",
-	"EDi4rSy2LZgKJX74mbLTFk4mxoTgT6F7HxxzG2HBAFyK",
-	"BnGKHAC386n4Qmv9xtpBVbRaUTKixjBe3oagkPFKtoy6",
-	"Dd7K2Fp7AtoN8xCghKDRmyqr5U169t48Tw5fEd3wT9mq",
-	"AP6qExwrbRgBAVaehg4b5xHENX815sMabtBzUzVB4v8S",
-	"8EpzWhsr7uyZkfVD7MTHoWqupM14xngzMeUcCkWbY1UG",
-	"56XRik27PddNnR7JkHKqd5pWdMHeqje7TCm1gsdmvnTP",
-	"2DJNtR1tT7vfub7sDJ6v9NGmrzGVFUer5FvjhEcWEpvv",
-	"3AveZTS3PJo5qKEqHJci5bjW8neufriirr9mJXfsv4iH",
-	"9DC798ezxU2f2i8ggQ4vsqrsNxdDWJWAFg4cT1xLDR1X",
-}
 
 func main() {
 	var err error
@@ -97,11 +79,14 @@ func main() {
 		panic(fmt.Sprintf("[get latest block hash] error: %v", err))
 	}
 
-	tipAccount := tipAccounts[rand.Intn(len(tipAccounts))]
+	tipAccount, err := examples.GRPCTipAccount(context.Background(), client)
+	if err != nil {
+		panic(fmt.Sprintf("[get tip accounts] error: %v", err))
+	}
 
 	// construct instruction
 	transferIx := system.NewTransferInstruction(amount, account.PublicKey(), receivePub).Build()
-	tipIx := system.NewTransferInstruction(tipAmount, account.PublicKey(), solana.MustPublicKeyFromBase58(tipAccount)).Build()
+	tipIx := system.NewTransferInstruction(tipAmount, account.PublicKey(), tipAccount).Build()
 
 	// construct transation, replace your transation
 	tx, err := solana.NewTransaction(
