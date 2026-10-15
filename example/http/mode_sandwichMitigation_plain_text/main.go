@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	examples "github.com/BlockRazorinc/solana-trader-client-go/example"
@@ -34,10 +34,6 @@ const (
 )
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
-
-type sendResponse struct {
-	Signature string `json:"signature"`
-}
 
 func main() {
 	if err := pingHealth(); err != nil {
@@ -129,10 +125,17 @@ func sendTx() error {
 		return err
 	}
 	defer resp.Body.Close()
-	var result sendResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return err
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("read response body: %w", err)
 	}
-	fmt.Printf("[send tx] response: %+v\n", result)
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("send transaction failed: status=%s body=%s", resp.Status, strings.TrimSpace(string(bodyBytes)))
+	}
+	signature := strings.TrimSpace(string(bodyBytes))
+	if signature == "" {
+		return fmt.Errorf("send transaction returned an empty signature")
+	}
+	fmt.Printf("[send tx] signature: %s\n", signature)
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	examples "github.com/BlockRazorinc/solana-trader-client-go/example"
@@ -34,9 +35,6 @@ var httpClient = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
-type SendResponse struct {
-	Signature string `json:"signature"`
-}
 type HealthResponse struct {
 	Result string `json:"result"`
 }
@@ -158,11 +156,17 @@ func sendTx() error {
 	}
 	defer resp.Body.Close()
 
-	bodyBytes, _ := io.ReadAll(resp.Body)
-	var sendRes SendResponse
-	if err := json.Unmarshal(bodyBytes, &sendRes); err != nil {
-		return fmt.Errorf("decode error: %v", err)
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("read response body: %w", err)
 	}
-	fmt.Printf("[send tx] response: %+v\n", sendRes)
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("send transaction failed: status=%s body=%s", resp.Status, strings.TrimSpace(string(bodyBytes)))
+	}
+	signature := strings.TrimSpace(string(bodyBytes))
+	if signature == "" {
+		return fmt.Errorf("send transaction returned an empty signature")
+	}
+	fmt.Printf("[send tx] signature: %s\n", signature)
 	return nil
 }
