@@ -31,6 +31,8 @@ const (
 
 	// tip amount
 	tipAmount = 100_000
+	// Leave empty to preserve the original bundle behavior. Set to "sandwichMitigation" to opt in.
+	mode = ""
 )
 
 func main() {
@@ -113,6 +115,7 @@ func main() {
 
 	sendRes, err := client.SendBundle(context.TODO(), &pb.SendBundleRequest{
 		Transactions: []string{txBase64},
+		Mode:         mode,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("[send bundle] error: %v", err))

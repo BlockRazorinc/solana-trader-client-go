@@ -29,6 +29,7 @@ message SendResponse {
 
 message SendBundleRequest {
     repeated string transactions = 1;
+    string mode = 2;
 }
 
 message SendBundleResponse {

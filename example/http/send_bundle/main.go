@@ -26,6 +26,8 @@ const (
 	publicKey           = ""
 	amount              = 200_000
 	tipAmount           = 100_000
+	// Leave empty to preserve the original bundle behavior. Set to "sandwichMitigation" to opt in.
+	mode = ""
 )
 
 var httpClient = &http.Client{
@@ -34,6 +36,7 @@ var httpClient = &http.Client{
 
 type SendRequest struct {
 	Transactions []string `json:"transactions"`
+	Mode         string   `json:"mode,omitempty"`
 }
 
 type SendResponse struct {
@@ -142,6 +145,7 @@ func sendBundle() error {
 
 	reqBody := SendRequest{
 		Transactions: []string{txBase64},
+		Mode:         mode,
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 

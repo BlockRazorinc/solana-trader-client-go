@@ -106,6 +106,8 @@ A bundle contains up to four fully signed, Base64-encoded transactions. Transact
 | gRPC | Base64 string array | `go run ./example/grpc/send_bundle` |
 | HTTP | Base64 string array in JSON | `go run ./example/http/send_bundle` |
 
+`SendBundle` accepts an optional `mode`. The examples leave it empty by default, preserving the original bundle behavior. Set it to `sandwichMitigation` to opt in to the new Sandwich Mitigation path. An omitted value, an empty value, and `fast` all retain the original behavior. The HTTP example omits `mode` from JSON while it is empty; the gRPC example sends the proto3 default empty string.
+
 Bundle access is not enabled by default. See [Solana Send Bundle](https://docs.blockrazor.io/transaction-submission/transaction-sending/solana/send-bundle) for activation and MEV-protection guidance.
 
 ## Authentication
